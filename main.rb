@@ -4,6 +4,7 @@ require_relative 'vector'
 
 GRAVITY = Vec[0, 600] #pixels/s^2
 JUMP_VEL = Vec[0, -300] #pixels/s  - is up
+OBSTACLE_SPEED = 200 #pixels/s, was pixels per frame
 
 # replace with vectors
 # Obstacle = DefStruct.new{{
@@ -15,6 +16,7 @@ GameState = DefStruct.new{{
 	scroll_x: 0,
 	player_pos: Vec[0,0],
 	player_vel: Vec[0,0],
+	obstacles: [] # array of Vec
 	}}
 
 class GameWindow < Gosu::Window
@@ -30,24 +32,32 @@ class GameWindow < Gosu::Window
 	end
 
 	def button_down(button)
-		close if button == Gosu::KbEscape
-		if button == Gosu::KbSpace
-			#0 0 is top left, postive number is down
-			@state.player_vel.set!(JUMP_VEL) 
-			#to avoid changing JUMP_VELOCITY
+		case button
+		when Gosu::KbEscape then close
+		when Gosu::KbSpace then @state.player_vel.set!(JUMP_VEL)
+		when Gosu::KbO then spawn_obstacle
 		end
 	end
 
+	def spawn_obstacle
+		@state.obstacles << Vec[width, 200]
+	end
+
 	def update
-		@state.scroll_x += 3
+		dt = (update_interval / 1000.0)
+
+		@state.scroll_x += dt*OBSTACLE_SPEED*0.5
 		if @state.scroll_x > @images[:foreground].width
 			@state.scroll_x = 0
 		end
 		# delta time
-		dt = (update_interval / 1000.0)
+		
 		@state.player_vel += dt * GRAVITY
 		# puts @state.player_y_vel
 		@state.player_pos +=  dt * @state.player_vel
+		@state.obstacles.each do |obst|
+			obst.x -= dt*OBSTACLE_SPEED
+		end
 	end
 
 	def draw
@@ -55,9 +65,11 @@ class GameWindow < Gosu::Window
 		@images[:foreground].draw(-@state.scroll_x, 350, 0)
 		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 350, 0)
 		@images[:player].draw(20, @state.player_pos.y, 0)
-		@images[:obstacle].draw(200, -400, 0)
-		scale(1, -1) do
-			@images[:obstacle].draw(200, -height - 520, 0)
+		@state.obstacles.each do |obst|
+			@images[:obstacle].draw(obst.x, -400, 0)
+			scale(1, -1) do
+				@images[:obstacle].draw(obst.x, -height - 520, 0)
+			end
 		end
 	end
 end
