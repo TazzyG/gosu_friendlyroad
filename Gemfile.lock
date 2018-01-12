@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/tomdalling/defstruct.git
+  revision: e0fc3722aa9e7035a83d7407367dbf9ef947036c
+  specs:
+    defstruct (0.0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -7,7 +13,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  defstruct!
   gosu (~> 0.10.4)
 
 BUNDLED WITH
-   1.16.0.pre.2
+   1.16.1
