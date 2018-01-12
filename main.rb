@@ -97,20 +97,20 @@ class GameWindow < Gosu::Window
 	end
 
 	def debug_draw
-		draw_debug_rect(Rect.new( pos: Vec[100, 100], size: Vec[200, 300]))
+		draw_debug_rect(Rect.new( pos: Vec[10, 10], size: Vec[20, 30]))
 	end
 
 	def draw_debug_rect(rect)
-		color = Gosu::Color::GREEN;
+		color = Gosu::Color::GREEN
 		x = rect.pos.x
 		y = rect.pos.y
 		w = rect.size.x
 		h = rect.size.y
 		points = [
 			Vec[x, y],
-			Vec[x + width, y],
-			Vec[x + width, y + height],
-			Vec[x, y + height]
+			Vec[x + w, y],
+			Vec[x + w, y + h],
+			Vec[x, y + h]
 		]
 
 		points.each_with_index do |p1, idx|
