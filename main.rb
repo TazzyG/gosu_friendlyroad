@@ -5,6 +5,8 @@ require_relative 'vector'
 GRAVITY = Vec[0, 600] #pixels/s^2
 JUMP_VEL = Vec[0, -300] #pixels/s  - is up
 OBSTACLE_SPEED = 200 #pixels/s, was pixels per frame
+OBSTACLE_SPAWN_INTERVAL = 1.3 #seconds
+OBSTACLE_GAP = 100 #pixels
 
 # replace with vectors
 # Obstacle = DefStruct.new{{
@@ -16,7 +18,8 @@ GameState = DefStruct.new{{
 	scroll_x: 0,
 	player_pos: Vec[0,0],
 	player_vel: Vec[0,0],
-	obstacles: [] # array of Vec
+	obstacles: [], # array of Vec
+	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
 	}}
 
 class GameWindow < Gosu::Window
@@ -35,12 +38,12 @@ class GameWindow < Gosu::Window
 		case button
 		when Gosu::KbEscape then close
 		when Gosu::KbSpace then @state.player_vel.set!(JUMP_VEL)
-		when Gosu::KbO then spawn_obstacle
+		# when Gosu::KbO then spawn_obstacle
 		end
 	end
 
 	def spawn_obstacle
-		@state.obstacles << Vec[width, 200]
+		@state.obstacles << Vec[width, 100]
 	end
 
 	def update
@@ -55,6 +58,12 @@ class GameWindow < Gosu::Window
 		@state.player_vel += dt * GRAVITY
 		# puts @state.player_y_vel
 		@state.player_pos +=  dt * @state.player_vel
+
+		@state.obstacle_countdown -= dt
+		if @state.obstacle_countdown <= 0 
+			spawn_obstacle
+			@state.obstacle_countdown += OBSTACLE_SPAWN_INTERVAL
+		end
 		@state.obstacles.each do |obst|
 			obst.x -= dt*OBSTACLE_SPEED
 		end
@@ -64,13 +73,17 @@ class GameWindow < Gosu::Window
 		@images[:background].draw(0, 0, 0)
 		@images[:foreground].draw(-@state.scroll_x, 350, 0)
 		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 350, 0)
-		@images[:player].draw(20, @state.player_pos.y, 0)
+		
 		@state.obstacles.each do |obst|
-			@images[:obstacle].draw(obst.x, -400, 0)
+			img_y = @images[:obstacle].height
+			#top obstacles
+			@images[:obstacle].draw(obst.x, obst.y - img_y, 0)
+			#bottom obstacles
 			scale(1, -1) do
-				@images[:obstacle].draw(obst.x, -height - 520, 0)
+				@images[:obstacle].draw(obst.x, - height - img_y + (height - obst.y - OBSTACLE_GAP), 0)
 			end
 		end
+		@images[:player].draw(20, @state.player_pos.y, 0)
 	end
 end
 window = GameWindow.new(800, 600, false)
