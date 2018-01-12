@@ -8,6 +8,13 @@ OBSTACLE_SPEED = 200 #pixels/s, was pixels per frame
 OBSTACLE_SPAWN_INTERVAL = 1.3 #seconds
 OBSTACLE_GAP = 100 #pixels
 
+Rect = DefStruct.new{{
+	pos: Vec[0, 0], # x, y
+	size: Vec[0 , 0] # width, height
+	# rotation:, maybe later
+
+	}}
+
 # replace with vectors
 # Obstacle = DefStruct.new{{
 # 	y: 0,
@@ -43,7 +50,7 @@ class GameWindow < Gosu::Window
 	end
 
 	def spawn_obstacle
-		@state.obstacles << Vec[width, 100]
+		@state.obstacles << Vec[width, rand(50..350)]
 	end
 
 	def update
@@ -84,8 +91,36 @@ class GameWindow < Gosu::Window
 			end
 		end
 		@images[:player].draw(20, @state.player_pos.y, 0)
+
+		#draws the collison boxes
+		debug_draw
+	end
+
+	def debug_draw
+		draw_debug_rect(Rect.new( pos: Vec[100, 100], size: Vec[200, 300]))
+	end
+
+	def draw_debug_rect(rect)
+		color = Gosu::Color::GREEN;
+		x = rect.pos.x
+		y = rect.pos.y
+		w = rect.size.x
+		h = rect.size.y
+		points = [
+			Vec[x, y],
+			Vec[x + width, y],
+			Vec[x + width, y + height],
+			Vec[x, y + height]
+		]
+
+		points.each_with_index do |p1, idx|
+			p2 = points[(idx + 1) % points.size]
+			draw_line(p1.x, p1.y, color, p2.x, p2.y, color)
+		end
+
 	end
 end
+
 window = GameWindow.new(800, 600, false)
 window.show
 
