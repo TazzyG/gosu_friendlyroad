@@ -9,6 +9,7 @@ OBSTACLE_SPAWN_INTERVAL = 1.3 #seconds
 OBSTACLE_GAP = 400 #pixels
 DEATH_VELOCITY = Vec[50, -500] #pixels/s
 DEATH_ROTATIONAL_VEL =  360 # degrees/s
+RESTART_INTERVAL = 3 # seconds
 
 Rect = DefStruct.new{{
 	pos: Vec[0, 0], # x, y
@@ -36,6 +37,7 @@ GameState = DefStruct.new{{
 	player_rotation: 0,
 	obstacles: [], # array of Obstacles
 	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
+	restart_countdown: RESTART_INTERVAL,
 	}}
 
 class GameWindow < Gosu::Window
@@ -73,12 +75,14 @@ class GameWindow < Gosu::Window
 		@state.player_vel += dt * GRAVITY
 		@state.player_pos +=  dt * @state.player_vel
 
-		@state.obstacle_countdown -= dt
-		if @state.obstacle_countdown <= 0 
-			@state.obstacles << Obstacle.new(pos: Vec[width, rand(50..350)])
-			@state.obstacle_countdown += OBSTACLE_SPAWN_INTERVAL
-			# puts @state.obstacles.size
-		end
+		if @state.alive
+			@state.obstacle_countdown -= dt
+			if @state.obstacle_countdown <= 0 
+				@state.obstacles << Obstacle.new(pos: Vec[width, rand(50..350)])
+				@state.obstacle_countdown += OBSTACLE_SPAWN_INTERVAL
+				# puts @state.obstacles.size
+			end
+		end 
 		@state.obstacles.each do |obst|
 			obst.pos.x -= dt*OBSTACLE_SPEED
 			if obst.pos.x < @state.player_pos.x && !obst.player_has_crossed && @state.alive
@@ -96,12 +100,21 @@ class GameWindow < Gosu::Window
 
 		unless @state.alive
 			@state.player_rotation += dt*DEATH_ROTATIONAL_VEL
+			@state.restart_countdown -= dt
+			if @state.restart_countdown <= 0
+				restart_game
+			end
 		end 
+	end
+
+	def restart_game
+		@state = GameState.new(scroll_x: @state.scroll_x)
 	end
 
 	def player_is_colliding?
 		player_r = player_rect
 		return true if obstacle_rects.find { |obst_r| rects_intersect?(player_r, obst_r) }
+		not rects_intersect?(player_r, Rect.new(pos: Vec[0, 0], size: Vec[width, height]))
 	end
 
 	def rects_intersect?(r1, r2)
