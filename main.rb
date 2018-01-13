@@ -12,7 +12,12 @@ Rect = DefStruct.new{{
 	pos: Vec[0, 0], # x, y
 	size: Vec[0 , 0] # width, height
 	# rotation:, maybe later
-	}}
+	}}.reopen do 
+		def min_x; pos.x; end #tip to shorten lines using ;
+		def min_y; pos.y; end
+		def max_x; pos.x + size.x; end
+		def max_y; pos.y + size.y; end
+	end
 
 # replace with vectors
 # Obstacle = DefStruct.new{{
@@ -81,8 +86,20 @@ class GameWindow < Gosu::Window
 	end
 
 	def player_is_colliding?
-
+		player_r = player_rect
+		return true if obstacle_rects.find { |obst_r| rects_intersect?(player_r, obst_r) }
 	end
+
+	def rects_intersect?(r1, r2)
+    return false if r1.max_x < r2.min_x
+    return false if r1.min_x > r2.max_x
+
+    return false if r1.min_y > r2.max_y
+    return false if r1.max_y < r2.min_y
+
+    true
+  end
+
 
 	def draw
 		@images[:background].draw(0, 0, 0)
@@ -123,15 +140,15 @@ class GameWindow < Gosu::Window
 	end
 
 	def debug_draw
-		draw_debug_rect(player_rect)
+		color = player_is_colliding? ? Gosu::Color::RED : Gosu::Color::GREEN
+		draw_debug_rect(player_rect, color)
 
 		obstacle_rects.each do |obst_rect|
 			draw_debug_rect(obst_rect)
 		end
 	end
 
-	def draw_debug_rect(rect)
-		color = Gosu::Color::GREEN
+	def draw_debug_rect(rect, color = Gosu::Color::GREEN)
 		x = rect.pos.x
 		y = rect.pos.y
 		w = rect.size.x
