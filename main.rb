@@ -12,7 +12,6 @@ Rect = DefStruct.new{{
 	pos: Vec[0, 0], # x, y
 	size: Vec[0 , 0] # width, height
 	# rotation:, maybe later
-
 	}}
 
 # replace with vectors
@@ -22,8 +21,9 @@ Rect = DefStruct.new{{
 # 	}}
 
 GameState = DefStruct.new{{
+	alive: true, 
 	scroll_x: 0,
-	player_pos: Vec[0,0],
+	player_pos: Vec[20,0],
 	player_vel: Vec[0,0],
 	obstacles: [], # array of Vec
 	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
@@ -36,7 +36,7 @@ class GameWindow < Gosu::Window
 			background: Gosu::Image.new(self, 'images/Fall-Nature-Background-Pictures.jpg', false),
 			foreground: Gosu::Image.new(self, 'images/foreground.png', true),
 			player: Gosu::Image.new(self, 'images/Bird1.png', false),
-			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false)
+			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false),
 		}
 		@state = GameState.new
 	end
@@ -74,6 +74,14 @@ class GameWindow < Gosu::Window
 		@state.obstacles.each do |obst|
 			obst.x -= dt*OBSTACLE_SPEED
 		end
+
+		if player_is_colliding? 
+			@state.alive = false
+		end
+	end
+
+	def player_is_colliding?
+
 	end
 
 	def draw
@@ -90,14 +98,36 @@ class GameWindow < Gosu::Window
 				@images[:obstacle].draw(obst.x, - height - img_y + (height - obst.y - OBSTACLE_GAP), 0)
 			end
 		end
-		@images[:player].draw(20, @state.player_pos.y, 0)
+		@images[:player].draw(@state.player_pos.x, @state.player_pos.y, 0)
 
 		#draws the collison boxes
 		debug_draw
 	end
 
+	def player_rect
+		Rect.new(
+			pos: @state.player_pos,
+			size: Vec[@images[:player].width, @images[:player].height]
+			)
+	end
+
+	def obstacle_rects
+		img_y = @images[:obstacle].height
+		obst_size = Vec[@images[:obstacle].width, @images[:obstacle].height]
+
+		@state.obstacles.flat_map do |obst|
+			top = Rect.new(pos: Vec[obst.x, obst.y - img_y], size: obst_size)
+			bottom = Rect.new( pos: Vec[obst.x, obst.y + OBSTACLE_GAP], size: obst_size)
+			[top, bottom]
+		end
+	end
+
 	def debug_draw
-		draw_debug_rect(Rect.new( pos: Vec[10, 10], size: Vec[20, 30]))
+		draw_debug_rect(player_rect)
+
+		obstacle_rects.each do |obst_rect|
+			draw_debug_rect(obst_rect)
+		end
 	end
 
 	def draw_debug_rect(rect)
