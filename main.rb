@@ -8,9 +8,7 @@ require_relative 'animation'
 PLAYER_ANIMATION_FPS = 5.0 #frames/second
 GRAVITY = Vec[0, 600] #pixels/s^2
 JUMP_VEL = Vec[0, -300] #pixels/s  - is up
-OBSTACLE_SPEED = 200 #pixels/s, was pixels per frame
 OBSTACLE_SPAWN_INTERVAL = 1.3 #seconds
-# OBSCTACLE_GAP replaced with difficulty[:obstacle_gap] = 400 #pixels
 DEATH_VELOCITY = Vec[50, -500] #pixels/s
 DEATH_ROTATIONAL_VEL =  360 # degrees/s
 RESTART_INTERVAL = 3 # seconds
@@ -51,7 +49,7 @@ Obstacle = DefStruct.new{{
 
 	}}
 GameState = DefStruct.new{{
-	difficulty: medium,
+	difficulty: :medium,
 	score: 0,
 	started: false,
 	alive: true, 
@@ -94,7 +92,7 @@ class GameWindow < Gosu::Window
 	def update
 		dt = (update_interval / 1000.0)
 
-		@state.scroll_x += dt*OBSTACLE_SPEED*0.5
+		@state.scroll_x += dt*difficulty[:speed]*0.5
 		if @state.scroll_x > @images[:foreground].width
 			@state.scroll_x = 0
 		end
@@ -112,7 +110,7 @@ class GameWindow < Gosu::Window
 			end
 		end 
 		@state.obstacles.each do |obst|
-			obst.pos.x -= dt*OBSTACLE_SPEED
+			obst.pos.x -= dt*difficulty[:speed]
 			if obst.pos.x < @state.player_pos.x && !obst.player_has_crossed && @state.alive
 				@state.score += 1
 				obst.player_has_crossed = true
@@ -179,8 +177,8 @@ class GameWindow < Gosu::Window
 	end
 
 	def difficulty
-		DIFFICULTIES[@state.difficulty]
-	end
+    DIFFICULTIES[@state.difficulty]
+  end
 
 	def player_frame
 		@images[@state.player_animation.frame]
