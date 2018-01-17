@@ -12,6 +12,10 @@ module Timer
 				@interval_remaining += @interval
 			end		
 		end
+
+		def interval=(new_interval)
+			@interval = new_interval
+		end
 	end
 	class OneShot
 		def initialize(interval)

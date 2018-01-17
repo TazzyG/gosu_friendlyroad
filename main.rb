@@ -60,7 +60,7 @@ GameState = DefStruct.new{{
 	player_animation: Animation.new(PLAYER_ANIMATION_FPS, PLAYER_FRAMES),
 	player_animation_timer: Timer::Looping.new(1.0/PLAYER_ANIMATION_FPS),
 	obstacles: [], # array of Obstacles
-	obstacle_timer: Timer::Looping.new(OBSTACLE_SPAWN_INTERVAL),
+	obstacle_timer: Timer::Looping.new(DIFFICULTIES[:medium][:obstacle_spawn_interval]),
 	restart_timer: Timer::OneShot.new(RESTART_INTERVAL),
 	}}
 
@@ -83,11 +83,19 @@ class GameWindow < Gosu::Window
 	def button_down(button)
 		case button
 		when Gosu::KbEscape then close
+		when Gosu::Kb1 then set_difficulty(:easy)
+    when Gosu::Kb2 then set_difficulty(:medium)
+    when Gosu::Kb3 then set_difficulty(:hard)
 		when Gosu::KbSpace 
 			@state.player_vel.set!(JUMP_VEL) if @state.alive
 			@state.started = true
 		end
 	end
+
+	def set_difficulty(name)
+    @state.difficulty = name
+    @state.obstacle_timer.interval = DIFFICULTIES[name][:obstacle_spawn_interval]
+  end
 
 	def update
 		dt = (update_interval / 1000.0)
