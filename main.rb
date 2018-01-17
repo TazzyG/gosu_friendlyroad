@@ -2,6 +2,7 @@ require 'gosu'
 require 'defstruct'
 require_relative 'vector'
 
+PLAYER_ANIMATION_FPS = 5.0 #frames/second
 GRAVITY = Vec[0, 600] #pixels/s^2
 JUMP_VEL = Vec[0, -300] #pixels/s  - is up
 OBSTACLE_SPEED = 200 #pixels/s, was pixels per frame
@@ -10,6 +11,7 @@ OBSTACLE_GAP = 400 #pixels
 DEATH_VELOCITY = Vec[50, -500] #pixels/s
 DEATH_ROTATIONAL_VEL =  360 # degrees/s
 RESTART_INTERVAL = 3 # seconds
+
 
 Rect = DefStruct.new{{
 	pos: Vec[0, 0], # x, y
@@ -35,10 +37,15 @@ GameState = DefStruct.new{{
 	player_pos: Vec[20, 350],
 	player_vel: Vec[0,0],
 	player_rotation: 0,
+	player_frame: 0,
+	player_frame_remaining: 1.0/PLAYER_ANIMATION_FPS,
+
 	obstacles: [], # array of Obstacles
 	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
 	restart_countdown: RESTART_INTERVAL,
 	}}
+
+	PLAYER_FRAMES = [:player1, :player2, :player3]
 
 class GameWindow < Gosu::Window
 	def initialize(*args)
@@ -47,7 +54,10 @@ class GameWindow < Gosu::Window
 		@images = {
 			background: Gosu::Image.new(self, 'images/Fall-Nature-Background-Pictures.jpg', false),
 			foreground: Gosu::Image.new(self, 'images/foreground.png', true),
-			player: Gosu::Image.new(self, 'images/Bird1.png', false),
+			player: Gosu::Image.new(self, 'images/dog.png', false),
+			player1: Gosu::Image.new(self, 'images/bird1.png', false),
+			player2: Gosu::Image.new(self, 'images/bird2.png', false), 
+			player3: Gosu::Image.new(self, 'images/birdFly_000.png', false),  
 			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false),
 		}
 		@state = GameState.new
@@ -70,6 +80,11 @@ class GameWindow < Gosu::Window
 			@state.scroll_x = 0
 		end
 
+		@state.player_frame_remaining -= dt
+		while @state.player_frame_remaining <= 0
+			@state.player_frame = (@state.player_frame + 1) % PLAYER_FRAMES.size
+			@state.player_frame_remaining += 1.0/PLAYER_ANIMATION_FPS
+		end
 		return unless @state.started
 		
 		@state.player_vel += dt * GRAVITY
@@ -142,7 +157,8 @@ class GameWindow < Gosu::Window
 				@images[:obstacle].draw(obst.pos.x, - height - img_y + (height - obst.pos.y - OBSTACLE_GAP), 0)
 			end
 		end
-		@images[:player].draw_rot(
+
+		player_frame.draw_rot(
 			@state.player_pos.x, @state.player_pos.y, 
 			0, @state.player_rotation,
 			0, 0)
@@ -152,10 +168,14 @@ class GameWindow < Gosu::Window
 		# debug_draw
 	end
 
+	def player_frame
+		@images[PLAYER_FRAMES[@state.player_frame]]
+	end
+
 	def player_rect
 		Rect.new(
 			pos: @state.player_pos,
-			size: Vec[@images[:player].width, @images[:player].height]
+			size: Vec[player_frame.width, player_frame.height]
 			)
 	end
 
