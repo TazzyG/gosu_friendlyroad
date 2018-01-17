@@ -40,9 +40,8 @@ GameState = DefStruct.new{{
 	player_rotation: 0,
 	player_frame: 0,
 	player_animation_timer: Timer.new(1.0/PLAYER_ANIMATION_FPS),
-
 	obstacles: [], # array of Obstacles
-	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
+	obstacle_timer: Timer.new(OBSTACLE_SPAWN_INTERVAL),
 	restart_countdown: RESTART_INTERVAL,
 	}}
 
@@ -91,10 +90,8 @@ class GameWindow < Gosu::Window
 		@state.player_pos +=  dt * @state.player_vel
 
 		if @state.alive
-			@state.obstacle_countdown -= dt
-			if @state.obstacle_countdown <= 0 
+			@state.obstacle_timer.update(dt) do
 				@state.obstacles << Obstacle.new(pos: Vec[width, rand(50..350)])
-				@state.obstacle_countdown += OBSTACLE_SPAWN_INTERVAL
 				# puts @state.obstacles.size
 			end
 		end 
