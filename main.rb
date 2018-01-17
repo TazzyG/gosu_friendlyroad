@@ -1,5 +1,5 @@
 require 'gosu'
-require 'defstruct'
+require_relative 'defstruct'
 require_relative 'vector'
 require_relative 'timer'
 require_relative 'animation'
@@ -10,11 +10,28 @@ GRAVITY = Vec[0, 600] #pixels/s^2
 JUMP_VEL = Vec[0, -300] #pixels/s  - is up
 OBSTACLE_SPEED = 200 #pixels/s, was pixels per frame
 OBSTACLE_SPAWN_INTERVAL = 1.3 #seconds
-OBSTACLE_GAP = 400 #pixels
+# OBSCTACLE_GAP replaced with difficulty[:obstacle_gap] = 400 #pixels
 DEATH_VELOCITY = Vec[50, -500] #pixels/s
 DEATH_ROTATIONAL_VEL =  360 # degrees/s
 RESTART_INTERVAL = 3 # seconds
 PLAYER_FRAMES = [:player1, :player2, :player3]
+DIFFICULTIES = {
+  easy: {
+    speed: 150, # pixels/s
+    obstacle_gap: 220, # pixels
+    obstacle_spawn_interval: 2.0, # secs
+  },
+  medium: {
+    speed: 200, # pixels/s
+    obstacle_gap: 180, #pixels
+    obstacle_spawn_interval: 1.3, #seconds
+  },
+  hard: {
+    speed: 400, # pixels/s
+    obstacle_gap: 160, # pixels
+    obstacle_spawn_interval: 1, #seconds
+  },
+}
 
 
 Rect = DefStruct.new{{
@@ -34,6 +51,7 @@ Obstacle = DefStruct.new{{
 
 	}}
 GameState = DefStruct.new{{
+	difficulty: medium,
 	score: 0,
 	started: false,
 	alive: true, 
@@ -146,7 +164,7 @@ class GameWindow < Gosu::Window
 			@images[:obstacle].draw(obst.pos.x, obst.pos.y - img_y, 0)
 			#bottom obstacles
 			scale(1, -1) do
-				@images[:obstacle].draw(obst.pos.x, - height - img_y + (height - obst.pos.y - OBSTACLE_GAP), 0)
+				@images[:obstacle].draw(obst.pos.x, - height - img_y + (height - obst.pos.y - difficulty[:obstacle_gap]), 0)
 			end
 		end
 
@@ -158,6 +176,10 @@ class GameWindow < Gosu::Window
 
 		#draws the collison boxes
 		# debug_draw
+	end
+
+	def difficulty
+		DIFFICULTIES[@state.difficulty]
 	end
 
 	def player_frame
@@ -177,7 +199,7 @@ class GameWindow < Gosu::Window
 
 		@state.obstacles.flat_map do |obst|
 			top = Rect.new(pos: Vec[obst.pos.x, obst.pos.y - img_y], size: obst_size)
-			bottom = Rect.new( pos: Vec[obst.pos.x, obst.pos.y + OBSTACLE_GAP], size: obst_size)
+			bottom = Rect.new( pos: Vec[obst.pos.x, obst.pos.y + difficulty[:obstacle_gap]], size: obst_size)
 			[top, bottom]
 		end
 	end
