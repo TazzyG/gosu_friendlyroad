@@ -45,8 +45,8 @@ Rect = DefStruct.new{{
 
 Obstacle = DefStruct.new{{
 	pos: Vec[0, 0],
-	player_has_crossed: false
-
+	player_has_crossed: false,
+	gap: DIFFICULTIES[:medium][:obstacle_gap],
 	}}
 GameState = DefStruct.new{{
 	difficulty: :medium,
@@ -113,7 +113,11 @@ class GameWindow < Gosu::Window
 
 		if @state.alive
 			@state.obstacle_timer.update(dt) do
-				@state.obstacles << Obstacle.new(pos: Vec[width, rand(50..350)])
+				@state.obstacles << Obstacle.new(
+					pos: Vec[width, rand(50..350)],
+					gap: difficulty[:obstacle_gap],
+					)
+
 				# puts @state.obstacles.size
 			end
 		end 
@@ -170,7 +174,7 @@ class GameWindow < Gosu::Window
 			@images[:obstacle].draw(obst.pos.x, obst.pos.y - img_y, 0)
 			#bottom obstacles
 			scale(1, -1) do
-				@images[:obstacle].draw(obst.pos.x, - height - img_y + (height - obst.pos.y - difficulty[:obstacle_gap]), 0)
+				@images[:obstacle].draw(obst.pos.x, - height - img_y + (height - obst.pos.y - obst.gap), 0)
 			end
 		end
 
@@ -205,7 +209,7 @@ class GameWindow < Gosu::Window
 
 		@state.obstacles.flat_map do |obst|
 			top = Rect.new(pos: Vec[obst.pos.x, obst.pos.y - img_y], size: obst_size)
-			bottom = Rect.new( pos: Vec[obst.pos.x, obst.pos.y + difficulty[:obstacle_gap]], size: obst_size)
+			bottom = Rect.new( pos: Vec[obst.pos.x, obst.pos.y + obst.gap], size: obst_size)
 			[top, bottom]
 		end
 	end
