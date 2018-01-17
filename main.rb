@@ -1,6 +1,7 @@
 require 'gosu'
 require 'defstruct'
 require_relative 'vector'
+require_relative 'timer'
 
 PLAYER_ANIMATION_FPS = 5.0 #frames/second
 GRAVITY = Vec[0, 600] #pixels/s^2
@@ -38,7 +39,7 @@ GameState = DefStruct.new{{
 	player_vel: Vec[0,0],
 	player_rotation: 0,
 	player_frame: 0,
-	player_frame_remaining: 1.0/PLAYER_ANIMATION_FPS,
+	player_animation_timer: Timer.new(1.0/PLAYER_ANIMATION_FPS),
 
 	obstacles: [], # array of Obstacles
 	obstacle_countdown: OBSTACLE_SPAWN_INTERVAL,
@@ -80,11 +81,10 @@ class GameWindow < Gosu::Window
 			@state.scroll_x = 0
 		end
 
-		@state.player_frame_remaining -= dt
-		while @state.player_frame_remaining <= 0
+		@state.player_animation_timer.update(dt) do
 			@state.player_frame = (@state.player_frame + 1) % PLAYER_FRAMES.size
-			@state.player_frame_remaining += 1.0/PLAYER_ANIMATION_FPS
 		end
+
 		return unless @state.started
 		
 		@state.player_vel += dt * GRAVITY
