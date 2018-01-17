@@ -2,7 +2,9 @@ require 'gosu'
 require 'defstruct'
 require_relative 'vector'
 require_relative 'timer'
+require_relative 'animation'
 
+# Contstants
 PLAYER_ANIMATION_FPS = 5.0 #frames/second
 GRAVITY = Vec[0, 600] #pixels/s^2
 JUMP_VEL = Vec[0, -300] #pixels/s  - is up
@@ -12,6 +14,7 @@ OBSTACLE_GAP = 400 #pixels
 DEATH_VELOCITY = Vec[50, -500] #pixels/s
 DEATH_ROTATIONAL_VEL =  360 # degrees/s
 RESTART_INTERVAL = 3 # seconds
+PLAYER_FRAMES = [:player1, :player2, :player3]
 
 
 Rect = DefStruct.new{{
@@ -37,15 +40,13 @@ GameState = DefStruct.new{{
 	scroll_x: 0,
 	player_pos: Vec[20, 350],
 	player_vel: Vec[0,0],
-	player_rotation: 0,
-	player_frame: 0,
+	player_rotation: 0, 
+	player_animation: Animation.new(PLAYER_ANIMATION_FPS, PLAYER_FRAMES),
 	player_animation_timer: Timer::Looping.new(1.0/PLAYER_ANIMATION_FPS),
 	obstacles: [], # array of Obstacles
 	obstacle_timer: Timer::Looping.new(OBSTACLE_SPAWN_INTERVAL),
 	restart_timer: Timer::OneShot.new(RESTART_INTERVAL),
 	}}
-
-	PLAYER_FRAMES = [:player1, :player2, :player3]
 
 class GameWindow < Gosu::Window
 	def initialize(*args)
@@ -79,10 +80,7 @@ class GameWindow < Gosu::Window
 		if @state.scroll_x > @images[:foreground].width
 			@state.scroll_x = 0
 		end
-
-		@state.player_animation_timer.update(dt) do
-			@state.player_frame = (@state.player_frame + 1) % PLAYER_FRAMES.size
-		end
+		@state.player_animation.update(dt)
 
 		return unless @state.started
 		
@@ -163,7 +161,7 @@ class GameWindow < Gosu::Window
 	end
 
 	def player_frame
-		@images[PLAYER_FRAMES[@state.player_frame]]
+		@images[@state.player_animation.frame]
 	end
 
 	def player_rect
