@@ -39,10 +39,10 @@ GameState = DefStruct.new{{
 	player_vel: Vec[0,0],
 	player_rotation: 0,
 	player_frame: 0,
-	player_animation_timer: Timer.new(1.0/PLAYER_ANIMATION_FPS),
+	player_animation_timer: Timer::Looping.new(1.0/PLAYER_ANIMATION_FPS),
 	obstacles: [], # array of Obstacles
-	obstacle_timer: Timer.new(OBSTACLE_SPAWN_INTERVAL),
-	restart_countdown: RESTART_INTERVAL,
+	obstacle_timer: Timer::Looping.new(OBSTACLE_SPAWN_INTERVAL),
+	restart_timer: Timer::OneShot.new(RESTART_INTERVAL),
 	}}
 
 	PLAYER_FRAMES = [:player1, :player2, :player3]
@@ -112,10 +112,7 @@ class GameWindow < Gosu::Window
 
 		unless @state.alive
 			@state.player_rotation += dt*DEATH_ROTATIONAL_VEL
-			@state.restart_countdown -= dt
-			if @state.restart_countdown <= 0
-				restart_game
-			end
+			@state.restart_timer.update(dt) { restart_game }
 		end 
 	end
 
