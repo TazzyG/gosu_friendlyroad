@@ -89,7 +89,7 @@ class GameWindow < Gosu::Window
 			player2: Gosu::Image.new(self, 'images/bird2.png', false), 
 			player3: Gosu::Image.new(self, 'images/birdFly_000.png', false),  
 			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false),
-			particle: Gosu::Image.new(self, 'images/particle.png', false),
+			particle: Gosu::Image.new(self, 'images/bubble.jpg', false),
 		}
 		@state = GameState.new
 	end
