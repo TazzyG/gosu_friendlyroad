@@ -13,6 +13,7 @@ DEATH_VELOCITY = Vec[50, -500] #pixels/s
 DEATH_ROTATIONAL_VEL =  360 # degrees/s
 RESTART_INTERVAL = 3 # seconds
 PLAYER_FRAMES = [:player1, :player2, :player3]
+OBSTACLE_PADDING = 50 #pixels
 DIFFICULTIES = {
   easy: {
     speed: 150, # pixels/s
@@ -113,9 +114,11 @@ class GameWindow < Gosu::Window
 
 		if @state.alive
 			@state.obstacle_timer.update(dt) do
+				gap = difficulty[:obstacle_gap]
+				lower_bound = height - OBSTACLE_PADDING - gap
 				@state.obstacles << Obstacle.new(
-					pos: Vec[width, rand(50..350)],
-					gap: difficulty[:obstacle_gap],
+					pos: Vec[width, rand(OBSTACLE_PADDING..lower_bound)],
+					gap: gap,
 					)
 
 				# puts @state.obstacles.size
@@ -143,7 +146,9 @@ class GameWindow < Gosu::Window
 	end
 
 	def restart_game
+		old_difficulty = @state.difficulty
 		@state = GameState.new(scroll_x: @state.scroll_x)
+		set_difficulty(old_difficulty)
 	end
 
 	def player_is_colliding?
@@ -183,6 +188,7 @@ class GameWindow < Gosu::Window
 			0, @state.player_rotation,
 			0, 0)
 		@font.draw_rel(@state.score.to_s, width/2.0, 60, 0, 0.5, 0.5)
+		@font.draw_rel(@state.difficulty.to_s, width - 10, height - 10, 0, 1.0, 1.0)
 
 		#draws the collison boxes
 		# debug_draw
