@@ -89,7 +89,7 @@ class GameWindow < Gosu::Window
 			player2: Gosu::Image.new(self, 'images/bird2.png', false), 
 			player3: Gosu::Image.new(self, 'images/birdFly_000.png', false),  
 			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false),
-			particle: Gosu::Image.new(self, 'images/bubble.jpg', false),
+			particle: Gosu::Image.new(self, 'images/clover_close2.png', false),
 		}
 		@state = GameState.new
 	end
@@ -167,18 +167,18 @@ class GameWindow < Gosu::Window
 	end
 
 	def particle_burst
-		100.times do
+		50.times do
 			@state.particles << Particle.new(
 				pos: Vec[width/2.0, 60],
-				velocity: Vec[rand(-80..60), rand(-300..-10)],
+				velocity: Vec[rand(-180..160), rand(-300..-10)],
 				rotation: rand(0..360),
 				rotational_velocity: rand(-360..360),
-				scale: rand(0.5..1.0), 
+				scale: rand(0.1..1.0), 
 				tint: Gosu::Color.new(
 					255, 
-					rand(100..255),
-					rand(100..255),
-					rand(100..255),
+					rand(50..255),
+					rand(0..255),
+					rand(50..255),
 					),
 				)
 		end
