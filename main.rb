@@ -46,9 +46,20 @@ Rect = DefStruct.new{{
 
 Obstacle = DefStruct.new{{
 	pos: Vec[0, 0],
+	velocity: Vec[0, 0],
 	player_has_crossed: false,
 	gap: DIFFICULTIES[:medium][:obstacle_gap],
 	}}
+
+Particle = DefStruct.new{{
+  pos: Vec[0,0],
+  velocity: Vec[0,0],
+  rotation: 0,
+  rotational_velocity: 0,
+  scale: 1.0,
+  tint: Gosu::Color::WHITE,
+}}
+
 GameState = DefStruct.new{{
 	difficulty: :medium,
 	score: 0,
@@ -61,6 +72,7 @@ GameState = DefStruct.new{{
 	player_animation: Animation.new(PLAYER_ANIMATION_FPS, PLAYER_FRAMES),
 	player_animation_timer: Timer::Looping.new(1.0/PLAYER_ANIMATION_FPS),
 	obstacles: [], # array of Obstacles
+	particles: [],
 	obstacle_timer: Timer::Looping.new(DIFFICULTIES[:medium][:obstacle_spawn_interval]),
 	restart_timer: Timer::OneShot.new(RESTART_INTERVAL),
 	}}
@@ -77,6 +89,7 @@ class GameWindow < Gosu::Window
 			player2: Gosu::Image.new(self, 'images/bird2.png', false), 
 			player3: Gosu::Image.new(self, 'images/birdFly_000.png', false),  
 			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false),
+			particle: Gosu::Image.new(self, 'images/particle.png', false),
 		}
 		@state = GameState.new
 	end
@@ -107,6 +120,13 @@ class GameWindow < Gosu::Window
 		end
 		@state.player_animation.update(dt)
 
+		@state.particles.each do |part|
+			part.velocity += dt * GRAVITY
+			part.pos += dt * part.velocity
+			part.rotation += dt * part.rotational_velocity
+		end
+		@state.particles.reject! { |parts| parts.pos.y >= height }
+
 		return unless @state.started
 		
 		@state.player_vel += dt * GRAVITY
@@ -129,6 +149,7 @@ class GameWindow < Gosu::Window
 			if obst.pos.x < @state.player_pos.x && !obst.player_has_crossed && @state.alive
 				@state.score += 1
 				obst.player_has_crossed = true
+				particle_burst
 			end
 		end
 
@@ -143,6 +164,24 @@ class GameWindow < Gosu::Window
 			@state.player_rotation += dt*DEATH_ROTATIONAL_VEL
 			@state.restart_timer.update(dt) { restart_game }
 		end 
+	end
+
+	def particle_burst
+		100.times do
+			@state.particles << Particle.new(
+				pos: Vec[width/2.0, 60],
+				velocity: Vec[rand(-80..60), rand(-300..-10)],
+				rotation: rand(0..360),
+				rotational_velocity: rand(-360..360),
+				scale: rand(0.5..1.0), 
+				tint: Gosu::Color.new(
+					255, 
+					rand(100..255),
+					rand(100..255),
+					rand(100..255),
+					),
+				)
+		end
 	end
 
 	def restart_game
@@ -170,6 +209,15 @@ class GameWindow < Gosu::Window
 
 	def draw
 		@images[:background].draw(0, 0, 0)
+		@state.particles.each do |part|
+      @images[:particle].draw_rot(
+        part.pos.x, part.pos.y, 0,
+        part.rotation,
+        0.5, 0.5, 
+        part.scale, part.scale,
+        part.tint,
+				)
+			end
 		@images[:foreground].draw(-@state.scroll_x, 350, 0)
 		@images[:foreground].draw(-@state.scroll_x + @images[:foreground].width, 350, 0)
 		
