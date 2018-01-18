@@ -91,7 +91,15 @@ class GameWindow < Gosu::Window
 			obstacle: Gosu::Image.new(self, 'images/obstacle.png', false),
 			particle: Gosu::Image.new(self, 'images/clover_close2.png', false),
 		}
+		@sounds = {
+			flap: Gosu::Sample.new(self, 'sound/jump.wav'),
+			score: Gosu::Sample.new(self, 'sound/score.wav'),
+			whistle: Gosu::Sample.new(self, 'sound/whistle.wav')
+		}
+
 		@state = GameState.new
+		@music = Gosu::Song.new(self, 'sound/Miaow-07-Bubble.mp3')
+		@music.play
 	end
 
 	def button_down(button)
@@ -101,7 +109,10 @@ class GameWindow < Gosu::Window
     when Gosu::Kb2 then set_difficulty(:medium)
     when Gosu::Kb3 then set_difficulty(:hard)
 		when Gosu::KbSpace 
-			@state.player_vel.set!(JUMP_VEL) if @state.alive
+			if @state.alive
+				@state.player_vel.set!(JUMP_VEL) 
+				@sounds[:flap].play(0.9, rand(0.9..1.1))
+			end
 			@state.started = true
 		end
 	end
@@ -140,13 +151,13 @@ class GameWindow < Gosu::Window
 					pos: Vec[width, rand(OBSTACLE_PADDING..lower_bound)],
 					gap: gap,
 					)
-
 				# puts @state.obstacles.size
 			end
 		end 
 		@state.obstacles.each do |obst|
 			obst.pos.x -= dt*difficulty[:speed]
 			if obst.pos.x < @state.player_pos.x && !obst.player_has_crossed && @state.alive
+				@sounds[:score].play(0.8, 0.8 + (@state.score * 0.1))
 				@state.score += 1
 				obst.player_has_crossed = true
 				particle_burst
@@ -161,6 +172,7 @@ class GameWindow < Gosu::Window
 		end
 
 		unless @state.alive
+			@sounds[:whistle].play(0.3)
 			@state.player_rotation += dt*DEATH_ROTATIONAL_VEL
 			@state.restart_timer.update(dt) { restart_game }
 		end 
