@@ -94,12 +94,12 @@ class GameWindow < Gosu::Window
 		@sounds = {
 			flap: Gosu::Sample.new(self, 'sound/jump.wav'),
 			score: Gosu::Sample.new(self, 'sound/score.wav'),
-			whistle: Gosu::Sample.new(self, 'sound/whistle.wav')
+			bird: Gosu::Sample.new(self, 'sound/bird.wav')
 		}
 
 		@state = GameState.new
 		@music = Gosu::Song.new(self, 'sound/Miaow-07-Bubble.mp3')
-		@music.play
+		@music.play(looping=true)
 	end
 
 	def button_down(button)
@@ -169,10 +169,10 @@ class GameWindow < Gosu::Window
 		if @state.alive && player_is_colliding? 
 			@state.alive = false
 			@state.player_vel.set!(DEATH_VELOCITY)
+			@sounds[:bird].play(0.3)
 		end
 
 		unless @state.alive
-			@sounds[:whistle].play(0.3)
 			@state.player_rotation += dt*DEATH_ROTATIONAL_VEL
 			@state.restart_timer.update(dt) { restart_game }
 		end 
